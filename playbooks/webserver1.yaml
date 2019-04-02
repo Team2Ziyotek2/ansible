@@ -1,0 +1,30 @@
+---
+- hosts: webserver
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: install apache package
+    yum:
+      name: httpd
+      state: latest 
+      update_cache: yes
+
+  - name: install python bindings centos 6
+    yum:
+      name: libselinux-python
+      state: latest
+      update_cache: yes
+
+  - name: deploy httpd configuration file
+    become_user: root
+    become: yes
+    copy:
+      src: /ansible/templates/httpd.conf.j2
+      dest: /etc/httpd/conf/httpd.conf
+
+  - name: restart httpd service
+    service:
+      name: httpd
+      state: restarted
+      enabled: yes

@@ -1,0 +1,32 @@
+---
+- hosts: webserver, loadbalancer
+  remote_user: ansible
+  become: yes
+
+  tasks:
+        
+  - name: install epel-release
+    yum:
+      name: epel-release
+      state: latest
+  
+  - name: install nagios client packages
+    yum:
+      pkg:
+        - nrpe
+        - nagios-plugins-all
+      state: latest
+      update_cache: yes
+
+  - name: deploy nagios client configuration file
+    become_user: root
+    become: yes
+    copy: 
+      src: /ansible/templates/nrpe6.cfg.j2
+      dest: /etc/nagios/nrpe.cfg
+
+  - name: restart nrpe service
+    service:
+      name: nrpe
+      state: restarted
+      enabled: yes

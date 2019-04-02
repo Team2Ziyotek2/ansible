@@ -1,0 +1,23 @@
+---
+- hosts: all,!ntp
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: Install NTP package
+    yum:
+      name: ntp
+      state: latest
+       
+  - name: deploy ntp client configuration file
+    become: yes
+    become_user: root
+    copy:
+      src: /ansible/templates/ntp.conf.j2
+      dest: /etc/ntp.conf
+
+  - name: restart ntpd service
+    service:
+      name: ntpd
+      state: restarted 
+      enabled: yes 

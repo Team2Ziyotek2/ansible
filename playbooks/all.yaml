@@ -1,0 +1,19 @@
+---
+- hosts: all
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: install all intitial packages
+    yum:
+      pkg: 
+        - man
+        - man-pages
+        - mlocate
+        - sysstat
+        - vim
+      state: latest
+      update_cache: yes
+
+
+    

@@ -1,0 +1,26 @@
+---
+- hosts: all,!ldap
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: install openldap packages
+    yum:
+      pkg:
+        - openldap-clients
+        - nss-pam-ldapd
+      state: latest
+      update_cache: yes
+
+
+  - name: LDAP Authentication
+
+    command: "authconfig --enableldap --enableldapauth --ldapserver=prdx-ldap12.ziyotek2.local --ldapbasedn='dc=ziyotek2,dc=local' --enablemkhomedir --update"
+    tags:
+       - "ldap"
+
+  - name: start nslcd service
+    service:
+      name: nslcd
+      state: started 
+      enabled: yes

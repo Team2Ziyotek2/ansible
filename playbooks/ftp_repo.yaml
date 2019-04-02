@@ -1,0 +1,64 @@
+---
+- hosts: ftp
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: Create iso dir  
+    become: yes
+    become_user: root
+    file:
+      path: /mnt/iso
+      state: directory
+
+  - name: Download Centos 7 Full iso
+    get_url:
+      url: http://mirrors.tripadvisor.com/centos/7.6.1810/isos/x86_64/CentOS-7-x86_64-DVD-1810.iso
+      dest: /tmp
+
+
+  - name: Mount Centos 7 iso 
+    shell: 'mount -t iso9660 -o loop,ro /tmp/CentOS-7-x86_64-DVD-1810.iso /mnt/iso'
+
+  - name: Create New Repo Directory in /var/ftp/pub 
+    become: yes
+    become_user: root
+    file:
+      path: /var/ftp/pub/Centos7_ftp
+      state: directory
+
+  - name: Copy Packages from iso to /var/ftp/pub/Centos7_ftp
+    become: yes
+    become_user: root
+    shell: 'cp -r /mnt/iso/Packages/  /var/ftp/pub/Centos7_ftp'
+
+  - name: Install createrepo package
+    yum:
+      name: createrepo
+      state: latest
+
+  - name: Create Custom Repo 
+    shell: ' createrepo /var/ftp/pub/Centos7_ftp '  
+
+  - name: Deploy Centos7_ftp.repo configuration file
+    become: yes
+    become_user: root
+    copy:
+      src: /ansible/templates/Centos7_ftp.repo.j2
+      dest: /etc/yum.repos.d/Centos7_ftp.repo
+
+  - name: Yum clean Cache
+    command: yum clean all
+
+  - name: Yum enable reoplist
+    command: yum repolist enabled
+
+  - name: restart ftp service
+    service:
+      name: vsftpd
+      state: restarted
+      enabled: yes
+
+
+  - name: Unmount Centos 7 iso
+    shell: ' umount /mnt/iso'

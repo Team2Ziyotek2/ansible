@@ -1,0 +1,72 @@
+---
+- hosts: mail
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: Install full mail server packages
+    yum:
+      pkg:
+        - epel-release
+        - postfix
+        - telnet
+        - mailx
+        - dovecot
+        - squirrelmail
+      state: latest
+      update_cache: yes
+
+  - name: Deploy postfix configuration file.
+    become: yes
+    become_user: root
+    copy:
+      src: /ansible/templates/mail/main.cf.j2
+      dest: /etc/postfix/main.cf
+
+  - name: restart postfix service
+    service:
+      name: postfix
+      state: restarted
+      enabled: yes
+
+  - name: create a test user
+    user:
+      name: student
+      password: '$1$Cc7ac.nf$BkYQPgg2rb5pyAa25vz/B.'
+      state: present
+
+  - name: Deploy Dovecot configuration files.
+    become: yes
+    become_user: root
+    copy: src={{ item.src}} dest={{ item.dest}}
+    with_items:
+      - { src: /ansible/templates/mail/dovecot.conf.j2 ,  dest: /etc/dovecot/dovecot.conf }
+      - { src: /ansible/templates/mail/10-mail.conf.j2 ,  dest: /etc/dovecot/conf.d/10-mail.conf }
+      - { src: /ansible/templates/mail/10-auth.conf.j2,   dest: /etc/dovecot/conf.d/10-auth.conf }
+      - { src: /ansible/templates/mail/10-master.conf.j2, dest: /etc/dovecot/conf.d/10-master.conf }
+      - { src: /ansible/templates/mail/config.php.j2,     dest: /etc/squirrelmail/config.php }
+      - { src: /ansible/templates/mail/httpd.conf.j2,     dest: /etc/httpd/conf/httpd.conf }
+
+  - name: restart Dovecot service
+    service:
+      name: dovecot
+      state: restarted
+      enabled: yes
+
+  - name: restart Apache service
+    service:
+      name: httpd
+      state: restarted
+      enabled: yes
+
+  - name: create mail users
+    user:
+      name: "{{ item }}"
+      password: '$1$Cc7ac.nf$BkYQPgg2rb5pyAa25vz/B.'
+      state: present
+    with_items:
+      - admin
+      - donald
+      - rico
+      - khoji
+      - steve

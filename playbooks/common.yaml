@@ -1,0 +1,26 @@
+---
+- hosts: all
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: install common pakages
+    yum:
+      pkg:
+        - ftp
+        - ntp
+        - mlocate
+        - vim
+        - bind-utils
+        - man
+        - man-pages
+        - sysstat
+        - mailx
+      state: latest
+      update_cache: yes
+
+  - name: write resolve config file
+    template:
+      src: /ansible/templates/resolv.conf.j2
+      dest: /etc/resolv.conf
+

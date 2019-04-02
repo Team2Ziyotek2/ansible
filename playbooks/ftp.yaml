@@ -1,0 +1,35 @@
+---
+- hosts: ftp
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name : install ftp package
+    yum:
+      pkg: vsftpd
+
+  - name: start ftp service
+    service:
+      name: vsftpd
+      state: started
+      enabled: yes
+  
+  - name: Create a login user
+    user:
+      name: ftpuser
+      password: '$1$eI8YZFCW$vhjNSmYdLtpIElNx4iK4m0'
+      state: present
+
+  - name: deploy ftp configuration file
+    become: yes
+    become_user: root
+    copy:
+      src: /ansible/templates/vsftpd.conf.j2
+      dest: /etc/vsftpd/vsftpd.conf
+
+  - name: restart ftp service
+    service:
+      name: vsftpd
+      state: restarted
+      enabled: yes
+

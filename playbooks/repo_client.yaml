@@ -1,0 +1,23 @@
+---
+- hosts: all,!ftp,!webserver,!loadbalancer
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: install ftp package
+    yum:
+      name: vsftpd
+      state: latest
+
+  - name: Deploy remote.repo configuration file
+    become: yes
+    become_user: root
+    copy:
+      src: /ansible/templates/remote.repo.j2
+      dest: /etc/yum.repos.d/remote.repo
+
+  - name: Yum clean Cache
+    command: yum clean all
+
+  - name: Yum enable reoplist
+    command: yum repolist enabled

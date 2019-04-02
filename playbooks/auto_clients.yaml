@@ -1,0 +1,53 @@
+---
+- hosts: all,!prdx-nfs12
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  
+  - name: restart rpcbind service
+    service:
+      name: rpcbind
+      state: restarted 
+      enabled: yes
+  
+  - name: restart nfs service
+    service:
+      name: nfs
+      state: restarted 
+      enabled: yes
+
+  - name: create a mounting dir
+    become: yes
+    become_user: root
+    file:
+      path: /auto_share
+      state: directory
+
+  - name: Install Autofs package
+    yum: 
+      name: autofs
+      state: latest
+
+
+  - name: Deploy auto.master configuration file
+    become_user: root
+    become: yes 
+    copy: 
+      src: /ansible/templates/auto.master.j2
+      dest: /etc/auto.master   
+  
+  - name: Deploy auto.share configuration file
+    become_user: root
+    become: yes 
+    copy: 
+      src: /ansible/templates/auto.share.j2
+      dest: /etc/auto.share
+
+  - name: restart Autofs service
+    service:
+      name: autofs
+      state: restarted 
+      enabled: yes
+
+   
